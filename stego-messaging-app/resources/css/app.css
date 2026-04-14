@@ -1,3 +1,5 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* resources/css/app.css */;
+@import '../../vendor/wirechat/wirechat/resources/css/app.css';

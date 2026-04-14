@@ -13,10 +13,16 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <!-- Livewire Styles -->
+        @livewireStyles
+
+        <!-- WireChat Styles -->
+        @wirechatStyles
     </head>
     <body class="font-sans antialiased">
+        @include('layouts.navigation')
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            @include('layouts.navigation')
 
             <!-- Page Heading -->
             @isset($header)
@@ -32,5 +38,11 @@
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- Livewire Scripts -->
+        @livewireScripts
+
+        <!-- WireChat Scripts -->
+        @wirechatAssets
     </body>
 </html>

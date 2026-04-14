@@ -1,7 +1,11 @@
 import './bootstrap';
 
-import Alpine from 'alpinejs';
+import focus from '@alpinejs/focus'
 
-window.Alpine = Alpine;
-
-Alpine.start();
+// Use Livewire's Alpine instance
+document.addEventListener('alpine:init', () => {
+    Alpine.plugin(focus)
+})
+document.addEventListener('livewire:navigated', () => {
+    document.body.style.overflowY = 'auto';
+});
