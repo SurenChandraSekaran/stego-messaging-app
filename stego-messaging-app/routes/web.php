@@ -14,7 +14,9 @@ Route::get('/dashboard', function () {
 // Chats page — uses our own layout so navigation stays visible
 Route::get('/chats', function () {
     return view('chats');
-})->middleware(['auth', 'verified'])->name('chats');
+})->middleware(['auth', 'verified'])
+  ->name('chats')
+  ->name('wirechat.chats.chats'); // This adds the second name the package wants
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

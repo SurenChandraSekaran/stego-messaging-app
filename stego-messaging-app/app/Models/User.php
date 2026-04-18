@@ -50,4 +50,13 @@ class User extends Authenticatable implements WirechatUser
     {
         return ['name', 'email'];
     }
+    public function isFriendsWith(User $user)
+    {
+        return \DB::table('friendships')
+            ->where(function($q) use ($user) {
+                $q->where('sender_id', $this->id)->where('recipient_id', $user->id);
+            })->orWhere(function($q) use ($user) {
+                $q->where('sender_id', $user->id)->where('recipient_id', $this->id);
+            })->where('status', 'accepted')->exists();
+    }
 }

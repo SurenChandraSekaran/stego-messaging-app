@@ -15,9 +15,12 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('chats')" :active="request()->routeIs('chats')">
+                    <x-nav-link :href=" url('/chats')" :active="request()->routeIs('chats')">
                         {{ __('Chats') }}
                     </x-nav-link>
+                    <div class="inline-flex items-center pt-1">
+                        <livewire:request-inbox />
+                    </div>
                 </div>
             </div>
 
