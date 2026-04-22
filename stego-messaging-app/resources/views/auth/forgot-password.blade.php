@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>StegoChat - Reset Password</title>
+    <title>StegChat - Reset Password</title>
 
 <style>
 body{

@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Storage;
+use Google\Cloud\Storage\StorageClient;
+use League\Flysystem\GoogleCloudStorage\GoogleCloudStorageAdapter;
+use League\Flysystem\Filesystem;
 use Livewire\Livewire;
-use Wirechat\Wirechat\Livewire\Concerns\HasPanel;
-use Wirechat\Wirechat\Livewire\Concerns\Widget;
 use Wirechat\Wirechat\Livewire\New\Chat as WirechatChat;
 use App\Traits\HandlesFriendRequests;
 

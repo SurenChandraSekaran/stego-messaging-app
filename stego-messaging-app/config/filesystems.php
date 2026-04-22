@@ -37,7 +37,7 @@ return [
             'throw' => false,
             'report' => false,
         ],
-
+    
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
@@ -46,20 +46,30 @@ return [
             'throw' => false,
             'report' => false,
         ],
-
-        's3' => [
-            'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
-            'report' => false,
+    
+        // Add this new Firebase/Google Cloud block
+        'firebase' => [
+            'driver' => 'gcs',
+            'key_file' => storage_path('app/firebase-auth.json'), // Your JSON key location
+            'bucket' => env('FIREBASE_STORAGE_BUCKET'),
+            'project_id' => env('FIREBASE_PROJECT_ID'),
+            'visibility' => 'public',
+            'throw' => true, // Set to true so you can see errors if the upload fails
         ],
-
+        'gcs' => [
+            'driver' => 'gcs',
+            'project_id' => env('FIREBASE_PROJECT_ID'),
+            'bucket' => env('FIREBASE_STORAGE_BUCKET'),
+            // We use 'key_file' to hold the ARRAY of data, as the Google Client prefers
+            'key_file' => json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true),
+            'metadata' => [
+                'acl' => [], // Send an empty array so no ACL is created
+                'predefinedAcl' => null, 
+            ],
+            'throw' => true, // This forces Laravel to show errors instead of returning 'false'
+        ],
+    
+        // You can delete the 's3' block entirely if it's distracting!
     ],
 
     /*

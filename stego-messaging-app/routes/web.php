@@ -3,6 +3,24 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+use Illuminate\Support\Facades\Storage;
+
+Route::get('/test-upload', function () {
+    $storage = new \Google\Cloud\Storage\StorageClient([
+        'projectId' => env('FIREBASE_PROJECT_ID'),
+        'keyFile' => json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true)
+    ]);
+
+    try {
+        $bucket = $storage->bucket(env('FIREBASE_STORAGE_BUCKET'));
+        $bucket->upload('Direct Google Test', [
+            'name' => 'test-from-google-client.txt'
+        ]);
+        return "SUCCESS: File uploaded via direct Google Client!";
+    } catch (\Exception $e) {
+        return "DETAILED ERROR: " . $e->getMessage();
+    }
+});
 Route::get('/', function () {
     return view('welcome');
 });

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>StegoChat - Register</title>
+    <title>StegChat - Register</title>
 
 <style>
 

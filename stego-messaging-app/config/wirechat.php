@@ -40,7 +40,7 @@ return [
      |
      */
     'storage' => [
-        'disk' => 'public',
+        'disk' => 'gcs',
         'visibility' => 'public',
         'directories' => [
             'attachments' => 'attachments',
