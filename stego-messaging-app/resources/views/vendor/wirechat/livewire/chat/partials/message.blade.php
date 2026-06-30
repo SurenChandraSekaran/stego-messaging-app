@@ -1,79 +1,66 @@
 @use('Wirechat\Wirechat\Facades\Wirechat')
 
-
 @php
-
    $isSameAsNext = ($message?->sendable_id === $nextMessage?->sendable_id) && ($message?->sendable_type === $nextMessage?->sendable_type);
    $isNotSameAsNext = !$isSameAsNext;
+
    $isSameAsPrevious = ($message?->sendable_id === $previousMessage?->sendable_id) && ($message?->sendable_type === $previousMessage?->sendable_type);
    $isNotSameAsPrevious = !$isSameAsPrevious;
+
+   // Decrypt body using the conversation's AES-256-CBC key
+   $security = app(App\Services\ChatSecurityService::class);
+   $key      = $message->conversation?->security_key;
+   $decryptedBody = ($message->body != '') ? $security->decrypt($message->body, $key) : '';
 @endphp
 
+{{-- @style removed: Tailwind bubble classes handle background directly --}}
 <div
-
-
-{{-- We use style here to make it easy for dynamic and safe injection --}}
-@style([
-'background-color:var(--wc-brand-primary)' => $belongsToAuth==true
-])
-
 @class([
-    'flex flex-wrap max-w-fit text-[15px] border border-gray-200/40 dark:border-none rounded-xl p-2.5 flex flex-col text-black bg-[#f6f6f8fb]',
-    'text-white' => $belongsToAuth, // Background color for messages sent by the authenticated user
-    'bg-[var(--wc-light-secondary)] dark:bg-[var(--wc-dark-secondary)] dark:text-white' => !$belongsToAuth,
+    'flex flex-wrap max-w-fit text-[15px] rounded-xl p-2.5 flex flex-col',
 
-    // Message styles based on position and ownership
+    {{-- Outgoing: deep navy blue tint — premium dark --}}
+    'bg-blue-950/60 border border-blue-900/40 text-white'     => $belongsToAuth,
 
-    // RIGHT
-    // First message on RIGHT
+    {{-- Incoming: elevated slate — legible against slate-950 chat bg --}}
+    'bg-slate-800/50 border border-slate-700/40 text-white'   => !$belongsToAuth,
+
+    {{-- Outgoing corner shapes --}}
     'rounded-br-md rounded-tr-2xl' => ($isSameAsNext && $isNotSameAsPrevious && $belongsToAuth),
+    'rounded-r-md'                 => ($isSameAsPrevious && $belongsToAuth),
+    'rounded-br-xl rounded-r-xl'   => ($isNotSameAsPrevious && $isNotSameAsNext && $belongsToAuth),
+    'rounded-br-2xl'               => ($isNotSameAsNext && $belongsToAuth),
 
-    // Middle message on RIGHT
-    'rounded-r-md' => ($isSameAsPrevious && $belongsToAuth),
-
-    // Standalone message RIGHT
-    'rounded-br-xl rounded-r-xl' => ($isNotSameAsPrevious && $isNotSameAsNext && $belongsToAuth),
-
-    // Last Message on RIGHT
-    'rounded-br-2xl' => ($isNotSameAsNext && $belongsToAuth),
-
-    // LEFT
-    // First message on LEFT
+    {{-- Incoming corner shapes --}}
     'rounded-bl-md rounded-tl-2xl' => ($isSameAsNext && $isNotSameAsPrevious && !$belongsToAuth),
-
-    // Middle message on LEFT
-    'rounded-l-md' => ($isSameAsPrevious && !$belongsToAuth),
-
-    // Standalone message LEFT
-    'rounded-bl-xl rounded-l-xl' => ($isNotSameAsPrevious && $isNotSameAsNext && !$belongsToAuth),
-
-    // Last message on LEFT
-    'rounded-bl-2xl' => ($isNotSameAsNext && !$belongsToAuth),
+    'rounded-l-md'                 => ($isSameAsPrevious && !$belongsToAuth),
+    'rounded-bl-xl rounded-l-xl'   => ($isNotSameAsPrevious && $isNotSameAsNext && !$belongsToAuth),
+    'rounded-bl-2xl'               => ($isNotSameAsNext && !$belongsToAuth),
 ])
 >
+
+{{-- Group sender name (incoming only) --}}
 @if (!$belongsToAuth && $isGroup)
-<div
-    @class([
-        'shrink-0 font-medium text-purple-500',
-        // Hide avatar if the next message is from the same user
-        'hidden' => $isSameAsPrevious
+    <div @class([
+        'shrink-0 text-xs font-semibold text-blue-400 mb-0.5',
+        'hidden' => $isSameAsPrevious,
     ])>
-    {{ $message?->sendable?->wirechat_name }}
-</div>
+        {{ $message?->sendable?->wirechat_name }}
+    </div>
 @endif
 
-<pre class="whitespace-pre-line tracking-normal break-all text-sm md:text-base dark:text-white lg:tracking-normal"
-    style="font-family: inherit;">
-    {{$message?->body}}
-</pre>
+{{-- Decrypted message body --}}
+<pre
+    class="whitespace-pre-line tracking-normal break-all text-sm md:text-[15px] text-white lg:tracking-normal"
+    style="font-family: inherit;"
+>{{ $decryptedBody }}</pre>
 
-{{-- Display the created time based on different conditions --}}
-<span
-@class(['text-[11px] ml-auto ',  'text-gray-700 dark:text-gray-300' => !$belongsToAuth,'text-gray-100' => $belongsToAuth])>
-    @php
-        // If the message was created today, show only the time (e.g., 1:00 AM)
-        echo $message?->created_at->format('H:i');
-    @endphp
+{{-- Timestamp --}}
+<span @class([
+    'text-[10px] ml-auto mt-0.5 tabular-nums',
+    'text-blue-300/50'  => $belongsToAuth,
+    'text-slate-500'    => !$belongsToAuth,
+])>
+    {{ $message?->created_at->timezone(config('app.timezone', 'Asia/Kuala_Lumpur'))->format('h:i A') }}
 </span>
 
 </div>

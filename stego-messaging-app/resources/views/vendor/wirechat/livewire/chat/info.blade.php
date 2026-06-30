@@ -18,7 +18,7 @@
                 <div class="mx-auto items-center justify-center grid">
 
                     <a href="{{ $receiver?->wirechat_profile_url }}">
-                        <x-wirechat::avatar :src="$wirechat_avatar_url" class=" h-32 w-32 mx-auto" />
+                        <x-wirechat::avatar :src="$receiver?->wirechat_avatar_url ?? $receiver?->avatar_url" class=" h-32 w-32 mx-auto" />
                     </a>
                 </div>
 

@@ -50,11 +50,11 @@ return [
         // Add this new Firebase/Google Cloud block
         'firebase' => [
             'driver' => 'gcs',
-            'key_file' => storage_path('app/firebase-auth.json'), // Your JSON key location
+            'key_file' => json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true),
             'bucket' => env('FIREBASE_STORAGE_BUCKET'),
             'project_id' => env('FIREBASE_PROJECT_ID'),
             'visibility' => 'public',
-            'throw' => true, // Set to true so you can see errors if the upload fails
+            'throw' => true,
         ],
         'gcs' => [
             'driver' => 'gcs',

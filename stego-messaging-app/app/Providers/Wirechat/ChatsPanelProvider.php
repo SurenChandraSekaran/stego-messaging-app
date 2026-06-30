@@ -22,6 +22,7 @@ class ChatsPanelProvider extends PanelProvider
              ->attachments()
              ->messagesQueue('messages')
              ->eventsQueue('default')
+             //->layout('layouts.app')
              //->redirectToHomeAction()
              ->homeUrl('/dashboard');
     }

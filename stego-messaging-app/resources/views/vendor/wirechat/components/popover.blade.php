@@ -13,18 +13,22 @@
     popoverOffset: 40,
     popoverHeightCalculate() {
         this.$refs.popover.classList.add('invisible'); 
-        this.popoverOpen=true; 
-        let that=this;
-        $nextTick(function(){ 
+        this.popoverOpen = true; 
+        let that = this;
+        this.$nextTick(function(){ 
             that.popoverHeight = that.$refs.popover.offsetHeight;
-            that.popoverOpen=false; 
+            that.popoverOpen = false; 
             that.$refs.popover.classList.remove('invisible');
             that.$refs.popoverInner.setAttribute('x-transition', '');
             that.popoverPositionCalculate();
         });
     },
-    popoverPositionCalculate(){
-        if(window.innerHeight < (this.$refs.popoverButton.getBoundingClientRect().top + this.$refs.popoverButton.offsetHeight + this.popoverOffset + this.popoverHeight)){
+    popoverPositionCalculate() {
+        if (!this.$refs.popoverButton) {
+            return;
+        }
+
+        if (window.innerHeight < (this.$refs.popoverButton.getBoundingClientRect().top + this.$refs.popoverButton.offsetHeight + this.popoverOffset + this.popoverHeight)) {
             this.popoverPosition = 'top';
         } else {
             this.popoverPosition = 'bottom';
@@ -32,11 +36,10 @@
     }
 }"
 x-init="
-    that = this;
-    window.addEventListener('resize', function(){
+    window.addEventListener('resize', () => {
         popoverPositionCalculate();
     });
-    $watch('popoverOpen', function(value){
+    $watch('popoverOpen', (value) => {
         if(value){
             popoverPositionCalculate();
             let el = document.getElementById('width');
@@ -45,6 +48,12 @@ x-init="
             }
         }
     });
+"
+@reveal-payload.window="
+    popoverOpen = true;
+    popoverHeightCalculate();
+    // Optional: If you want to do something with the text 'TESTING SECRET PAYLOAD DETECTED'
+    console.log($event.detail.message); 
 "
 class="relative overflow-visible">
 

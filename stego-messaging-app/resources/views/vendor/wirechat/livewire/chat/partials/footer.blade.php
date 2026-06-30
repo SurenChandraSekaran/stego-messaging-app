@@ -79,7 +79,7 @@
                     class="  flex flex-col w-full gap-3" wire:loading.class="animate-pulse" wire:target="sendMessage">
 
 
-
+                    
                     @if (count($media) > 0)
                         <div x-data="attachments('media')">
                             {{-- todo: Implement error handling fromserver during file uploads --}}
@@ -101,25 +101,24 @@
 
                                 {{-- Loop through media for preview --}}
                                 @foreach ($media as $key => $mediaItem)
-                                    @if (str()->startsWith($mediaItem->getMimeType(), 'image/'))
-                                        <div class="relative h-24 sm:h-36 aspect-4/3 ">
-                                            {{-- Delete image --}}
-                                            <button wire:loading.attr="disabled"
-                                                class="disabled:cursor-progress absolute -top-2 -right-2  z-10 dark:text-gray-50"
-                                                @click="removeUpload('{{ $mediaItem->getFilename() }}')">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                    fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
-                                                    <path
-                                                        d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                                                    <path
-                                                        d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
-                                                </svg>
-                                            </button>
-                                            <img class="h-full w-full  rounded-lg object-scale-down"
-                                                src="{{ $mediaItem->temporaryUrl() }}" alt="mediaItem">
+                                @if (str()->startsWith($mediaItem->getMimeType(), 'image/'))
+                                    <div class="relative h-24 sm:h-36 aspect-4/3 ">
+                                        
+                                        {{-- Delete image --}}
+                                        <button wire:loading.attr="disabled"
+                                            class="disabled:cursor-progress absolute -top-2 -right-2 z-10 dark:text-gray-50"
+                                            @click="removeUpload('{{ $mediaItem->getFilename() }}'); $dispatch('reset-stegano');">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle" viewBox="0 0 16 16">
+                                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                                                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
+                                            </svg>
+                                        </button>
+                                        
+                                        <img class="h-full w-full rounded-lg object-scale-down"
+                                            src="{{ $mediaItem->temporaryUrl() }}" alt="mediaItem">
 
-                                        </div>
-                                    @endif
+                                    </div>
+                                @endif
 
                                     {{-- Attachemnt is Video/ --}}
                                     @if (str()->startsWith($mediaItem->getMimeType(), 'video/'))
@@ -143,9 +142,11 @@
 
 
                                 <label wire:loading.class="cursor-progress"
+                                    x-show="!$wire.steganoMode"
                                     class="shrink-0 cursor-pointer relative w-16 h-14 rounded-lg  bg-[var(--wc-light-secondary)] dark:bg-[var(--wc-dark-primary)]   hover:bg-[var(--wc-light-primary)] dark:hover:bg-[var(--wc-dark-primary)] border border-[var(--wc-light-secondary)] dark:border-[var(--wc-dark-secondary)]  flex text-center justify-center ">
                                     <input wire:loading.attr="disabled"
-                                        @change="handleFileSelect(event,{{ count($media) }})" type="file" multiple
+                                        @change="handleFileSelect(event,{{ count($media) }})" type="file"
+                                        :multiple="!$wire.steganoMode"
                                            accept="{{ collect($this->panel()->getMediaMimes())->map(fn($ext) => '.' . $ext)->implode(',') }}"
                                            class="sr-only">
                                     <span class="m-auto ">
@@ -266,26 +267,21 @@
 
                 <form x-data="{
                     'body': $wire.entangle('body'),
+                    'stegano': $wire.entangle('steganoMode'),
                     insertNewLine: function(textarea) {
-                        {{-- Get the current cursor position --}}
                         var startPos = textarea.selectionStart;
                         var endPos = textarea.selectionEnd;
-
-                        {{-- Insert a line break character at the cursor position --}}
                         var text = textarea.value;
                         var newText = text.substring(0, startPos) + '\n' + text.substring(endPos, text.length);
-
-                        {{-- Update the textarea value and cursor position --}}
                         textarea.value = newText;
-                        textarea.selectionStart = startPos + 1; // Set cursor position after the inserted newline
+                        textarea.selectionStart = startPos + 1;
                         textarea.selectionEnd = startPos + 1;
-
-                        {{-- update height of element smoothly --}}
                         textarea.style.height = 'auto';
                         textarea.style.height = textarea.scrollHeight + 'px';
-
                     }
-                }" x-init="
+                }"
+                @reset-stegano.window="stegano = false;"
+                x-init="
                     @if($hasEmojiPicker)
                 {{-- Emoji picture click event listener --}}
                 document.querySelector('emoji-picker')
@@ -299,7 +295,7 @@
 
                         const startPos = inputField.selectionStart;
                         const endPos = inputField.selectionEnd;
-
+                        
                         // Insert the emoji at the current cursor position
                         const newValue = inputFieldValue.substring(0, startPos) + emoji + inputFieldValue.substring(endPos);
 
@@ -342,10 +338,33 @@
                     {{-- Show  upload pop if media or file are empty --}}
                     {{-- Also only show  upload popup if allowed in configuration  --}}
                     @if (count($this->media) == 0 && count($this->files) == 0 && $this->panel()->hasAttachments())
+                    {{-- ── Secure Payload Track (Steganography) ── --}}
+                    <div class="flex flex-col items-center gap-0.5 shrink-0">
+                        <button wire:loading.attr="disabled" type="button"
+                            @click="stegano = !stegano; if(stegano) { $dispatch('trigger-media-select'); }"
+                            class="cursor-pointer hover:scale-105 transition-transform p-1 rounded-full flex items-center justify-center"
+                            :class="stegano ? 'text-blue-400 bg-blue-500/10 ring-1 ring-blue-500/40 shadow-[0_0_12px_rgba(59,130,246,0.2)]' : 'text-slate-400 hover:text-slate-200'"
+                            title="Inject Secure Payload (Steganography)">
+                            
+                            <!-- Heroicon: Lock Closed (Active) / Lock Open (Inactive) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" :fill="stegano ? 'currentColor' : 'none'" 
+                                viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
+                                <path stroke-linecap="round" stroke-linejoin="round" 
+                                    x-bind:d="stegano 
+                                    ? 'M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z' 
+                                    : 'M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z'" />
+                            </svg>
+                        </button>
+                        <span
+                            class="font-mono text-[8px] tracking-wider uppercase leading-none pointer-events-none"
+                            :class="stegano ? 'text-blue-400' : 'text-slate-600'"
+                        >Secure</span>
+                    </div>
+                    {{-- ── Plain Media Track (standard upload) ── --}}
                         <x-wirechat::popover position="top" popoverOffset="70">
 
                             <x-slot name="trigger" wire:loading.attr="disabled">
-                                <span dusk="upload-trigger-button">
+                                <span dusk="upload-trigger-button" class="flex flex-col items-center gap-0.5">
 
                                     {{-- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                         stroke="currentColor" class="w-7 h-7 dark:text-white/90">
@@ -362,88 +381,76 @@
                                     {{-- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.3" stroke="currentColor" class="size-6 w-7 h-7 text-gray-600 dark:text-white/90">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
                                           </svg> --}}
-                                    <svg class="size-6 w-7 h-7 text-gray-600 dark:text-white/60"
+                                    <svg class="size-6 w-7 h-7 text-slate-400 hover:text-slate-200 transition-colors"
                                         xmlns="http://www.w3.org/2000/svg" width="36" height="36"
                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
-                                        stroke-linecap="round" stroke-linejoin="round" class="ai ai-Attach">
+                                        stroke-linecap="round" stroke-linejoin="round">
                                         <path
                                             d="M6 7.91V16a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V6a4 4 0 0 0-4-4v0a4 4 0 0 0-4 4v9.182a2 2 0 0 0 2 2v0a2 2 0 0 0 2-2V8" />
                                     </svg>
+                                    <span class="font-mono text-[8px] tracking-wider uppercase leading-none text-slate-600">Plain</span>
 
                                 </span>
 
                             </x-slot>
 
                             {{-- content --}}
-                            <div class="grid gap-2 w-full ">
+                            <div class="grid gap-1 w-48 p-1.5 bg-slate-900 border border-slate-800 rounded-lg shadow-xl text-xs">
 
-                                {{-- Upload Files --}}
-                                @if ($this->panel()->hasFileAttachments())
-                                    <label wire:loading.class="cursor-progress" x-data="attachments('files')"
-                                        class="cursor-pointer">
-                                        <input wire:loading.attr="disabled" wire:target="sendMessage"
-                                            dusk="file-upload-input"
-                                            @change="handleFileSelect(event, {{ count($files) }})" type="file"
-                                            multiple
-
-                                               accept="{{ collect($this->panel()->getFileMimes())->map(fn($ext) => '.' . $ext)->implode(',') }}"
-
-                                               class="sr-only" style="display: none">
-
-                                        <div
-                                            class="w-full  flex items-center gap-3 px-1.5 py-2 rounded-md hover:bg-[var(--wc-light-primary)] dark:hover:bg-[var(--wc-dark-primary)] cursor-pointer">
-
-                                            <span>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                    fill="currentColor" style="color: var(--wc-brand-primary);"
-                                                    class="bi bi-folder-fill w-6 h-6" viewBox="0 0 16 16">
-                                                    <path
-                                                        d="M9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.825a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31L.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3m-8.322.12q.322-.119.684-.12h5.396l-.707-.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981z" />
-                                                </svg>
-                                            </span>
-
-                                            <span class=" dark:text-white">
-                                               @lang('wirechat::chat.actions.upload_file.label')
-                                            </span>
-                                        </div>
-                                    </label>
-                                @endif
-
-
-                                {{-- Upload Media --}}
+                                {{-- Option A: Standard Photos & Videos Track (Plain Media) --}}
                                 @if ($this->panel()->hasMediaAttachments())
-                                    <label wire:loading.class="cursor-progress" x-data="attachments('media')"
-                                        class="cursor-pointer">
+                                    <label wire:loading.class="cursor-progress" x-data="attachments('media')" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-slate-800 cursor-pointer text-slate-200 hover:text-white transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-blue-400">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                        </svg>
+                                        <span>Upload Photos / Videos</span>
 
-                                        {{-- Trigger image upload --}}
-                                        <input dusk="media-upload-input" wire:loading.attr="disabled"
+                                        <input dusk="media-upload-input"
+                                            x-ref="steganoInput"
+                                            x-on:trigger-media-select.window="$refs.steganoInput.click()"
+                                            x-init="$el.addEventListener('cancel', () => { if (stegano) { stegano = false; } });"
+                                            wire:loading.attr="disabled"
                                             wire:target="sendMessage"
-                                            @change="handleFileSelect(event, {{ count($media) }})" type="file"
-                                            multiple
-                                               accept="{{ collect($this->panel()->getMediaMimes())->map(fn($ext) => '.' . $ext)->implode(',') }}"
-
-                                               class="sr-only" style="display: none">
-
-                                        <div
-                                            class="w-full flex items-center gap-3 px-1.5 py-2 rounded-md hover:bg-[var(--wc-light-primary)] dark:hover:bg-[var(--wc-dark-primary)] cursor-pointer">
-
-                                            <span class="">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                                                    fill="currentColor" class="w-6 h-6"
-                                                    style="color: var(--wc-brand-primary);">
-                                                    <path fill-rule="evenodd"
-                                                        d="M1.5 6a2.25 2.25 0 0 1 2.25-2.25h16.5A2.25 2.25 0 0 1 22.5 6v12a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 18V6ZM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0 0 21 18v-1.94l-2.69-2.689a1.5 1.5 0 0 0-2.12 0l-.88.879.97.97a.75.75 0 1 1-1.06 1.06l-5.16-5.159a1.5 1.5 0 0 0-2.12 0L3 16.061Zm10.125-7.81a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                            </span>
-
-                                            <span class=" dark:text-white">
-                                               @lang('wirechat::chat.actions.upload_media.label')
-                                            </span>
-                                        </div>
+                                            @change="
+                                                if (stegano) {
+                                                    if ($event.target.files.length > 1) {
+                                                        $dispatch('wirechat-toast', { type: 'warning', message: 'Steganography mode only supports 1 image file at a time!' });
+                                                        $event.target.value = '';
+                                                        stegano = false;
+                                                        return;
+                                                    }
+                                                    const file = $event.target.files[0];
+                                                    if (file && !['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+                                                        $event.target.value = '';
+                                                        stegano = false;
+                                                        return;
+                                                    }
+                                                }
+                                                handleFileSelect($event, {{ count($media) }})
+                                            "
+                                            type="file"
+                                            :multiple="!stegano"
+                                            :accept="stegano ? 'image/png, image/jpeg, image/jpg' : 'image/*,video/*'"
+                                            class="sr-only"
+                                            style="display: none">
                                     </label>
                                 @endif
 
+                                {{-- Option B: Standard Documents Track (Files) --}}
+                                @if ($this->panel()->hasFileAttachments())
+                                    <label wire:loading.class="cursor-progress" x-data="attachments('files')" class="w-full flex items-center gap-3 px-2.5 py-2 rounded-md hover:bg-slate-800 cursor-pointer text-slate-200 hover:text-white transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-emerald-400">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                                        </svg>
+                                        <span>Upload Documents</span>
+
+                                        <input wire:loading.attr="disabled" wire:target="sendMessage" dusk="file-upload-input"
+                                            @change="handleFileSelect(event, {{ count($files) }})" type="file" multiple
+                                            accept="{{ collect($this->panel()->getFileMimes())->map(fn($ext) => '.' . $ext)->implode(',') }}"
+                                            class="sr-only"
+                                            style="display: none">
+                                    </label>
+                                @endif
 
                             </div>
                         </x-wirechat::popover>
@@ -456,13 +463,16 @@
                     <div @class(['flex gap-2 sm:px-2 w-full'])>
                         <textarea @focus-input-field.window="$el.focus()" autocomplete="off" x-model='body' x-ref="body"
                             wire:loading.delay.longest.attr="disabled" wire:target="sendMessage" id="chat-input-field" autofocus
-                            type="text" name="message" placeholder="{{ __('wirechat::chat.inputs.message.placeholder') }}" maxlength="1700" rows="1"
+                            type="text" name="message" :placeholder="stegano ? 'Type your secret hidden message...' : '{{ __('wirechat::chat.inputs.message.placeholder') }}'" maxlength="1700" rows="1"
                             @input="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px';"
                             @keydown.shift.enter.prevent="insertNewLine($el)" {{-- @keydown.enter.prevent prevents the
                                default behavior of Enter key press only if Shift is not held down. --}} @keydown.enter.prevent=""
                             @keyup.enter.prevent="$event.shiftKey ? null : (((body && body?.trim().length > 0) || ($wire.media && $wire.media.length > 0)) ? $wire.sendMessage() : null)"
                             class="wc-textarea bg-inherit dark:bg-inherit w-full disabled:cursor-progress resize-none h-auto max-h-20  sm:max-h-72 flex grow border-0 outline-0 focus:border-0 focus:ring-0  hover:ring-0 rounded-lg   dark:text-white bg-none dark:bg-inherit  focus:outline-hidden   "
+                            :class="stegano ? 'text-emerald-400 font-mono' : 'text-white'"
+                        
                             x-init="
+                        
                               @if($hasEmojiPicker)
                             document.querySelector('emoji-picker')
                                 .addEventListener('emoji-click', event => {
@@ -574,9 +584,19 @@
 
                         // Handle file selection from the input field
                         handleFileSelect(event, count) {
-                            if (event.target.files.length) {
-                                const files = event.target.files;
+                            const files = Array.from(event.target.files);
 
+                            // Strict 1-file enforcement for Steganography
+                            if (this.$wire.steganoMode && (files.length > 1 || count > 0)) {
+                                this.$dispatch('wirechat-toast', {
+                                    type: 'warning',
+                                    message: 'Steganography mode only supports 1 image file at a time!'
+                                });
+                                event.target.value = '';
+                                return;
+                            }
+
+                            if (files.length) {
                                 // Validate selected files and upload if valid
                                 this.validateFiles(files, count)
                                     .then((validFiles) => {

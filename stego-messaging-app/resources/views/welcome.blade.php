@@ -18,6 +18,15 @@ body{
     border-radius: 6px;
 }
 
+/* Simple, clean, and italicized */
+.welcome-text {
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: #444;
+    margin-bottom: 25px;
+}
+
 a{
     display: block;
     margin: 10px 0;
@@ -32,13 +41,13 @@ a{
 
 <body>
 
-<h1 style="font-family: Lucida Handwriting; font-size: 60px;">
+<h1 style="font-family: 'Lucida Handwriting', cursive; font-size: 60px;">
 StegChat
 </h1>
 
 <div class="container">
 
-<p>Welcome</p>
+<p class="welcome-text">Welcome to StegChat!</p>
 
 <a href="{{ route('login') }}">Login</a>
 <a href="{{ route('register') }}">Register</a>

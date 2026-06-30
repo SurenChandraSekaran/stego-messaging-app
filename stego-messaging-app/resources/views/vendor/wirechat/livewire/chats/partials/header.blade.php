@@ -8,7 +8,7 @@
 
         @if (isset($heading))
             <div class="flex items-center gap-2 truncate  " wire:ignore>
-                <h2 class=" text-2xl font-bold dark:text-white"  dusk="heading">{{$heading}}</h2>
+                <h2 class=" text-2xl font-bold dark:text-white"  dusk="heading">Chats</h2>
             </div>
         @endif
 

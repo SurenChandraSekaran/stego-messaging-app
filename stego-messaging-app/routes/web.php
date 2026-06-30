@@ -1,33 +1,65 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Services\SteganoService;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\StegoController;
 use Illuminate\Support\Facades\Storage;
 
-Route::get('/test-upload', function () {
-    $storage = new \Google\Cloud\Storage\StorageClient([
-        'projectId' => env('FIREBASE_PROJECT_ID'),
-        'keyFile' => json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true)
-    ]);
+
+Route::post('/stego/extract', [StegoController::class, 'extract'])->name('stego.extract');
+
+// Add this to routes/web.php temporarily
+Route::get('/stegano-test', function () {
+    $service = app(App\Services\SteganoService::class);
+    
+    // 1. Path to the image you just sent (check your storage/app/public/chats folder)
+    // Or download the image from your chat UI and put it in public/test.png
+    $imagePath = public_path('test.png'); 
+
+    if (!file_exists($imagePath)) return "Image not found. Upload a sent image to public/test.png";
 
     try {
-        $bucket = $storage->bucket(env('FIREBASE_STORAGE_BUCKET'));
-        $bucket->upload('Direct Google Test', [
-            'name' => 'test-from-google-client.txt'
-        ]);
-        return "SUCCESS: File uploaded via direct Google Client!";
+        // 2. Extract the scrambled bits
+        $extractedScrambled = $service->extract($imagePath);
+        
+        // 3. Try to decrypt it
+        $decrypted = Illuminate\Support\Facades\Crypt::decryptString($extractedScrambled);
+        
+        return "Success! Secret Message: " . $decrypted;
     } catch (\Exception $e) {
-        return "DETAILED ERROR: " . $e->getMessage();
+        return "Extraction failed or data is corrupted. Error: " . $e->getMessage();
+    }
+});
+
+Route::get('/stego-test', function () {
+    $service = new SteganoService();
+    
+    // 1. Path to a sample image in your public folder
+    $inputPath = public_path('Picture11.png'); 
+    $outputPath = public_path('stego_result.png');
+    $secretMessage = "This is a hidden message for my FYP!";
+
+    try {
+        // 2. Run Embedding
+        $service->embed($inputPath, $secretMessage, $outputPath);
+        echo "<h3>1. Embedding Successful!</h3>";
+        echo "Original: test.jpg <br> Result: stego_result.png (Check your public folder)<br>";
+
+        // 3. Run Extraction
+        $extracted = $service->extract($outputPath);
+        echo "<h3>2. Extraction Result:</h3>";
+        echo "Extracted Text: <strong>" . ($extracted ?? "Nothing found") . "</strong>";
+        
+    } catch (\Exception $e) {
+        return "Error: " . $e->getMessage();
     }
 });
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', \App\Livewire\Dashboard::class)->middleware(['auth', 'verified'])->name('dashboard');
 
 // Chats page — uses our own layout so navigation stays visible
 Route::get('/chats', function () {
@@ -35,6 +67,8 @@ Route::get('/chats', function () {
 })->middleware(['auth', 'verified'])
   ->name('chats')
   ->name('wirechat.chats.chats'); // This adds the second name the package wants
+  // Alias the route name wirechat is searching for directly to your workspace URL
+Route::get('/chat', \App\Livewire\CustomChat::class)->name('wirechat.chats.chats');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

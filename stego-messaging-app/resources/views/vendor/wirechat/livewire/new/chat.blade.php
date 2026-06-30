@@ -1,50 +1,37 @@
 @use('Wirechat\Wirechat\Facades\Wirechat')
 <div id="new-chat-modal">
-    <div class="relative w-full h-96 border mx-auto border-[var(--wc-light-secondary)] dark:border-[var(--wc-dark-secondary)] overflow-auto bg-[var(--wc-light-primary)] dark:bg-[var(--wc-dark-primary)] dark:text-white px-7 sm:max-w-lg sm:rounded-lg">
+    <div class="relative w-full h-96 border mx-auto border-slate-800 overflow-auto bg-slate-950 text-white px-7 sm:max-w-lg sm:rounded-xl shadow-2xl">
 
-        <header class="sticky top-0 bg-[var(--wc-light-primary)] dark:bg-[var(--wc-dark-primary)] z-10 py-2">
+        <header class="sticky top-0 bg-slate-950 z-10 py-2">
             <div class="flex justify-between items-center pb-2">
-                <h3 class="text-lg font-semibold">{{ __('wirechat::new.chat.labels.heading') }}</h3>
+                <h3 class="text-sm font-semibold tracking-widest text-slate-300 uppercase font-mono">
+                    {{ __('wirechat::new.chat.labels.heading') }}
+                </h3>
 
                 <x-wirechat::actions.close-modal>
                     <button dusk="close_modal_button"
-                        class="p-2 text-gray-600 hover:bg-[var(--wc-light-secondary)] dark:hover:bg-[var(--wc-dark-secondary)] dark:hover:text-white rounded-full hover:text-gray-800">
-                        <svg class="w-5 h-5 cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor">
+                        class="p-1.5 text-slate-400 hover:bg-slate-800 hover:text-slate-200 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </x-wirechat::actions.close-modal>
             </div>
 
-            <section class="flex flex-wrap items-center px-0 border-b border-[var(--wc-light-border)] dark:border-[var(--wc-dark-border)]">
+            <section class="flex flex-wrap items-center px-0 border-b border-slate-800">
                 <input dusk="search_users_field" autofocus type="search" id="users-search-field"
                     wire:model.live.debounce='search' autocomplete="off"
                     placeholder="{{ __('wirechat::new.chat.inputs.search.placeholder') }}"
-                    class="wc-input w-full border-0 py-2 px-0 dark:bg-[var(--wc-dark-primary)] outline-hidden focus:outline-hidden bg-[var(--wc-light-primary)] rounded-lg focus:ring-0 hover:ring-0">
+                    class="wc-input w-full border-0 py-2 px-0 bg-slate-950 text-white placeholder-slate-600 outline-hidden focus:outline-hidden rounded-lg focus:ring-0 hover:ring-0 text-sm">
             </section>
         </header>
 
         <div class="relative w-full">
-            {{-- New Group button --}}
-            @if ($this->panel()->hasCreateGroupAction() && auth()->user()->canCreateGroups())
-                <x-wirechat::actions.new-group widget="{{ $this->isWidget() }}" panel="{{ $this->panel }}">
-                    <button @dusk="open_new_group_modal_button"
-                        class="flex items-center gap-3 my-4 rounded-lg p-2 w-full border transition-colors border-[var(--wc-light-border)] dark:border-[var(--wc-dark-border)] hover:border-[var(--wc-light-secondary)] dark:hover:border-[var(--wc-dark-secondary)]">
-                        <span style="color: var(--wc-brand-primary);" class="p-1 bg-gray-100 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                                <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" />
-                                <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
-                            </svg>
-                        </span>
-                        <p class="dark:text-white">@lang('wirechat::new.chat.actions.new_group.label')</p>
-                    </button>
-                </x-wirechat::actions.new-group>
-            @endif
 
             <section class="my-4 grid">
                 @if (count($users) != 0)
-                    <ul class="overflow-auto flex flex-col">
+                    <ul class="overflow-auto flex flex-col gap-0.5">
                         @foreach ($users as $key => $user)
                             @php
                                 $friendship = \App\Models\Friendship::where(function($q) use ($user) {
@@ -60,31 +47,30 @@
                                 @elseif(!$friendship)
                                     wire:click="sendChatRequest('{{ $user['id'] }}')"
                                 @endif
-    
-                                class="flex gap-2 items-center p-2 rounded-lg transition-colors
-                                {{-- Change cursor and hover based on status --}}
-                                @if($friendship && $friendship->status === 'pending') 
-                                    cursor-default opacity-70 
-                                @else 
-                                    cursor-pointer hover:bg-gray-50 dark:hover:bg-[var(--wc-dark-secondary)] 
+
+                                class="flex gap-3 items-center p-2.5 rounded-lg transition-colors
+                                @if($friendship && $friendship->status === 'pending')
+                                    cursor-default opacity-60
+                                @else
+                                    cursor-pointer hover:bg-slate-800/60
                                 @endif"
                             >
-                                <x-wirechat::avatar :src="$user['wirechat_avatar_url']" class="w-10 h-10" />
+                                <x-wirechat::avatar :src="$user['wirechat_avatar_url']" class="w-9 h-9 shrink-0" />
 
-                                <div class="flex flex-col flex-1">
-                                    <p class="font-medium dark:text-white">
+                                <div class="flex flex-col flex-1 min-w-0">
+                                    <p class="font-medium text-slate-100 text-sm truncate">
                                         {{ $user['wirechat_name'] }}
                                     </p>
 
                                     @if(!$friendship)
-                                        <span class="text-xs text-blue-500 font-semibold">Click to Connect</span>
+                                        <span class="text-[11px] text-blue-400 font-mono tracking-wide">[ INITIATE HANDSHAKE ]</span>
                                     @elseif($friendship->status === 'pending')
-                                        <span class="text-xs text-yellow-600 flex items-center gap-1">
-                                            <svg class="w-3 h-3 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/></svg>
-                                            Handshake Pending
+                                        <span class="text-[11px] text-amber-400 font-mono flex items-center gap-1">
+                                            <svg class="w-2.5 h-2.5 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/></svg>
+                                            HANDSHAKE PENDING
                                         </span>
                                     @elseif($friendship->status === 'accepted')
-                                        <span class="text-xs text-green-500 font-semibold italic">✓ Connected</span>
+                                        <span class="text-[11px] text-emerald-400 font-mono tracking-wide">&#x2713; SECURE CHANNEL AVAILABLE</span>
                                     @endif
                                 </div>
                             </li>
@@ -92,7 +78,7 @@
                     </ul>
                 @else
                     @if (!empty($search))
-                        <span class="m-auto">@lang('wirechat::new.chat.messages.empty_search_result')</span>
+                        <span class="text-slate-500 text-sm font-mono text-center py-4">@lang('wirechat::new.chat.messages.empty_search_result')</span>
                     @endif
                 @endif
             </section>
