@@ -16,13 +16,15 @@ class ChatsPanelProvider extends PanelProvider
              ->default()
              ->heading('StegChat')
              ->chatsSearch()
+             ->mediaMaxUploadSize(256000) // Changes Media limit to 250MB
+             ->fileMaxUploadSize(256000)  // Changes File limit to 250MB
              ->createChatAction()
              ->createGroupAction()
              ->emojiPicker()
              ->attachments()
              ->messagesQueue('messages')
              ->eventsQueue('default')
-             //->layout('layouts.app')
+             ->layout('layouts.app')
              //->redirectToHomeAction()
              ->homeUrl('/dashboard');
     }

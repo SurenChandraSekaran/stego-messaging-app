@@ -12,7 +12,13 @@
             Only admins can send messages
         </div>
     @else
-        <div id="chat-footer" x-data="{ 'openEmojiPicker': false }"
+        <div id="chat-footer" x-data="{ 'openEmojiPicker': false, isUploading: false, init() {
+             // Turn off the loading bar once files successfully hit the backend preview collections
+             this.$watch('$wire.media', value => { if (value && value.length > 0) this.isUploading = false; });
+             this.$watch('$wire.files', value => { if (value && value.length > 0) this.isUploading = false; });
+         }}"
+            x-on:change="if ($event.target.type === 'file' && $event.target.files.length > 0) isUploading = true;"
+            x-on:wirechat-toast.window="isUploading = false"
             class=" px-3 md:px-1 border-t  shadow-sm bg-[var(--wc-light-primary)]   dark:bg-[var(--wc-dark-secondary)]   z-50   border-[var(--wc-light-border)] dark:border-[var(--wc-dark-primary)] flex flex-col gap-3 items-center  w-full   mx-auto">
 
             {{-- Emoji section , we put it seperate to avoid interfering as overlay for form when opened --}}
@@ -73,11 +79,23 @@
             {{-- form and detail section  --}}
             <section
                 class="  sm:px-4 py-3.5   z-50     flex flex-col gap-3 items-center  w-full mx-auto">
-
+                <div x-show="isUploading" x-transition class="w-full px-4 pt-2" x-cloak>
+                    <div class="flex justify-between items-center mb-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="animate-spin h-3.5 w-3.5 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Uploading and encrypting media asset...
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden relative">
+                        <div class="bg-blue-600 h-1.5 rounded-full absolute top-0 left-0 bottom-0 animate-[pulse_1s_infinite] w-full origin-left"></div>
+                    </div>
+                </div>
                 {{-- Media preview section --}}
                 <section x-show="$wire.media.length>0 ||$wire.files.length>0" x-cloak
                     class="  flex flex-col w-full gap-3" wire:loading.class="animate-pulse" wire:target="sendMessage">
-
 
                     
                     @if (count($media) > 0)
@@ -257,7 +275,17 @@
 
                         {{-- Message being replied to --}}
                         <p class="truncate text-sm text-gray-500 dark:text-gray-200 max-w-md">
-                            {{ $replyMessage->body != '' ? $replyMessage->body : ($replyMessage->hasAttachment() ? 'Attachment' : '') }}
+                            @if($replyMessage->body != '')
+                                @php
+                                    $securityService = app(\App\Services\ChatSecurityService::class);
+                                    // Remember to match your conversation key column name here too (e.g., encryption_key, key, etc.)
+                                    $conversationKey = $conversation?->security_key; 
+                                @endphp
+                                
+                                {{ $securityService->decrypt($replyMessage->body, $conversationKey) }}
+                            @else
+                                {{ $replyMessage->hasAttachment() ? 'Attachment' : '' }}
+                            @endif
                         </p>
 
                     </section>
@@ -423,6 +451,19 @@
                                                     if (file && !['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
                                                         $event.target.value = '';
                                                         stegano = false;
+                                                        return;
+                                                    }
+                                                }
+                                
+                                                const selectedFile = $event.target.files[0];
+                                                if (selectedFile) {
+                                                    const maxAllowedSize = 200 * 1024 * 1024; // 200MB in Bytes
+                                                    if (selectedFile.size > maxAllowedSize) {
+                                                        $dispatch('wirechat-toast', { 
+                                                            type: 'error', 
+                                                            message: 'File is too large! Maximum allowed upload size is 200MB.' 
+                                                        });
+                                                        $event.target.value = ''; // Reset input to allow choosing a different file
                                                         return;
                                                     }
                                                 }
@@ -681,7 +722,7 @@
                                     if (file.size > this.maxSize) {
                                         $dispatch('wirechat-toast', {
                                             type: 'warning',
-                                            message:this.type===media?
+                                            message:this.type==='media'?
                                                     @js(__('wirechat::validation.max.file', ['attribute' => __('wirechat::chat.inputs.media.label'),'max'=>$this->panel()->getMediaMaxUploadSize()])):
                                                     @js(__('wirechat::validation.max.file', ['attribute' => __('wirechat::chat.inputs.media.label'),'max'=>$this->panel()->getFileMaxUploadSize()]))
 
@@ -691,7 +732,7 @@
                                         const extension = file.name.split('.').pop().toLowerCase();
                                         $dispatch('wirechat-toast', {
                                             type: 'warning',
-                                            message: this.type===media?
+                                            message: this.type==='media'?
                                                     @js(__('wirechat::validation.mimes', [ 'attribute' => __('wirechat::chat.inputs.media.label'), 'values' => implode(', ', $this->panel()->getMediaMimes()) ])):
                                                     @js(__('wirechat::validation.mimes', [ 'attribute' => __('wirechat::chat.inputs.media.label'), 'values' => implode(', ', $this->panel()->getFileMimes()) ]))
                                            // message: `One or more Files not uploaded: .${extension} (type not allowed)`

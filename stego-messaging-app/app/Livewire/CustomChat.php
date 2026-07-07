@@ -21,6 +21,31 @@ class CustomChat extends WirechatChat
 
     public function sendMessage()
     {
+        // ── STEP 1: GLOBAL SIZE VALIDATION FROM ADMIN PANEL ─────────────────────
+        if (!empty($this->media)) {
+            $maxMb = cache('max_payload_size', 25); // Dynamic admin setting (fallback to 25MB)
+            $maxKb = $maxMb * 1024;                // Convert Megabytes to Kilobytes for Laravel
+
+            try {
+                // Validate all staging files in the media array
+                $this->validate([
+                    'media.*' => "max:{$maxKb}",
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // Catch the failure, alert the user using your app's toast engine, and halt execution
+                $this->dispatch('toast', [
+                    'title' => 'File Too Large', 
+                    'message' => "This file exceeds the system boundary of {$maxMb}MB set by the administrator.", 
+                    'type' => 'error'
+                ]);
+                
+                // Clear the media container so the bad file doesn't get stuck in the input loop
+                $this->media = [];
+                return;
+            }
+        }
+        // ────────────────────────────────────────────────────────────────────────
+
         if (!$this->steganoMode) {
             parent::sendMessage();
             return;
@@ -91,9 +116,6 @@ class CustomChat extends WirechatChat
         $this->steganoMode = false;
 
         // ── FIX: THE RENDER CYCLE SAFEGUARD ─────────────────────────────────────
-        // We clear the component's media property out right here. This ensures that
-        // when Livewire performs its update render cycle, the footer blade preview
-        // loop skips completely, avoiding the Symfony file missing exception!
         $this->media = [];
         // ────────────────────────────────────────────────────────────────────────
     

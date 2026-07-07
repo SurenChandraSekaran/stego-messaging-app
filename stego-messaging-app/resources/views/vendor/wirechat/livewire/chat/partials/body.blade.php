@@ -174,10 +174,22 @@
                                         'px-1 border-[var(--wc-light-secondary)] dark:border-[var(--wc-dark-accent)] overflow-hidden ',
                                         ' border-r-4 ml-auto' => $belongsToAuth,
                                         ' border-l-4 mr-auto ' => !$belongsToAuth,
-                                    ])>
-                                        <p
-                                            class=" bg-[var(--wc-light-secondary)] dark:text-white break-all  dark:bg-[var(--wc-dark-secondary)] text-black line-clamp-1 text-sm  rounded-full max-w-fit   px-3 py-1 ">
-                                            {{ $parent?->body != '' ? $parent?->body : ($parent->hasAttachment() ?  __('wirechat::chat.labels.attachment') : '') }}
+                                        ])>
+                                        <p class="bg-[var(--wc-light-secondary)] dark:text-white break-all dark:bg-[var(--wc-dark-secondary)] text-black line-clamp-1 text-sm rounded-full max-w-fit px-3 py-1">
+                                            @if($parent?->body != '')
+                                                @php
+                                                    // Inject your custom security service directly into the view
+                                                    $securityService = app(\App\Services\ChatSecurityService::class);
+                                                    
+                                                    // Fetch the conversation's unique key. 
+                                                    // NOTE: If your key column is named differently (e.g., 'key' or 'secret'), change 'encryption_key' below to match your database column.
+                                                    $conversationKey = $conversation?->security_key; 
+                                                @endphp
+
+                                                {{ $securityService->decrypt($parent->body, $conversationKey) }}
+                                            @else
+                                                {{ $parent->hasAttachment() ? __('wirechat::chat.labels.attachment') : '' }}
+                                            @endif
                                         </p>
                                     </div>
 

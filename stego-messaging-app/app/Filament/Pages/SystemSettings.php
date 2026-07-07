@@ -15,11 +15,12 @@ class SystemSettings extends Page
     protected static string $view = 'filament.pages.system-settings';
     protected static ?string $navigationGroup = 'System Controls';
 
+    // Holds the form input values temporarily
     public ?array $data = [];
 
     public function mount(): void
     {
-        $this->form->fill([
+                $this->form->fill([
             'max_payload_size' => cache('max_payload_size', 25),
             'system_notice'    => cache('system_notice', ''),
         ]);
@@ -60,7 +61,8 @@ class SystemSettings extends Page
                 ->color('success')
                 ->action(function () {
                     $formData = $this->form->getState();
-
+                    
+                    // Save both values straight into Laravel's cache permanently
                     cache(['max_payload_size' => $formData['max_payload_size']], now()->addYears(1));
                     cache(['system_notice'    => $formData['system_notice']],    now()->addYears(1));
 
@@ -71,4 +73,4 @@ class SystemSettings extends Page
                 }),
         ];
     }
-}
+} 
