@@ -46,3 +46,4 @@ RUN echo "upload_max_filesize = 100M" > /usr/local/etc/php/conf.d/uploads.ini \
 
 # Automate cache clearing and migrations on every container bootup
 CMD ["sh", "-c", "php artisan config:clear && php artisan migrate --force && apache2-foreground"]
+RUN php artisan view:clear
