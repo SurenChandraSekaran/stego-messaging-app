@@ -50,8 +50,7 @@ return [
         // Add this new Firebase/Google Cloud block
         'firebase' => [
             'driver' => 'gcs',
-            'key_file' => json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true),
-            'bucket' => env('FIREBASE_STORAGE_BUCKET'),
+            'key_file' => json_decode(env('FIREBASE_CREDENTIALS') ?: (file_exists(storage_path('app/firebase-auth.json')) ? file_get_contents(storage_path('app/firebase-auth.json')) : '{}'), true),            'bucket' => env('FIREBASE_STORAGE_BUCKET'),
             'project_id' => env('FIREBASE_PROJECT_ID'),
             'visibility' => 'public',
             'throw' => true,
@@ -61,8 +60,7 @@ return [
             'project_id' => env('FIREBASE_PROJECT_ID'),
             'bucket' => env('FIREBASE_STORAGE_BUCKET'),
             // We use 'key_file' to hold the ARRAY of data, as the Google Client prefers
-            'key_file' => json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true),
-            'metadata' => [
+            'key_file' => json_decode(env('FIREBASE_CREDENTIALS') ?: (file_exists(storage_path('app/firebase-auth.json')) ? file_get_contents(storage_path('app/firebase-auth.json')) : '{}'), true),            'metadata' => [
                 'acl' => [], // Send an empty array so no ACL is created
                 'predefinedAcl' => null, 
             ],
