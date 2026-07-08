@@ -14,6 +14,8 @@ use Wirechat\Wirechat\Models\Conversation;
 use App\Observers\ConversationObserver;
 use Wirechat\Wirechat\Models\Message;
 use App\Observers\MessageObserver;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +42,16 @@ class AppServiceProvider extends ServiceProvider
 
         Message::observe(MessageObserver::class);
         Conversation::observe(ConversationObserver::class);
+
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Verify Your StegChat Account')
+                ->greeting('Welcome to StegChat!')
+                ->line('Before you can start sending secure messages and embedding hidden data, please verify your email address.')
+                ->action('Verify Email Address', $url)
+                ->line('If you did not create an account, no further action is required.')
+                ->salutation('Regards, The StegChat Team');
+        });
     }
 } 
 

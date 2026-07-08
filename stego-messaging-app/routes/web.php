@@ -5,7 +5,19 @@ use App\Services\SteganoService;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StegoController;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
+/*Route::get('/test-mail', function () {
+    try {
+        Mail::raw('Hey! If you are reading this, your Laravel Gmail SMTP integration is 100% working!', function ($message) {
+            $message->to('your_personal_email@gmail.com') // Put your actual personal email here
+                    ->subject('Laravel Gmail Test Delivery');
+        });
+        return 'Email sent successfully! Check your inbox (and spam folder).';
+    } catch (\Exception $e) {
+        return 'Mail failed to send. Error: ' . $e->getMessage();
+    }
+});*/
 
 Route::post('/stego/extract', [StegoController::class, 'extract'])->name('stego.extract');
 
