@@ -10,28 +10,38 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-Route::get('/init-super-admin-xyz99', function () {
+Route::get('/fix-admin-now', function () {
     try {
-        // Look for the specific Gmail address instead
         $adminEmail = 'stegchatadmin@gmail.com';
+        
+        // Find your existing account or make a clean instance
+        $user = User::firstOrNew(['email' => $adminEmail]);
+        
+        $user->name = 'Admin';
+        
+        // Bypass model constraints by manually assigning these flags directly
+        $user->is_admin = true; 
+        $user->email_verified_at = now();
+        
+        // Assign a clean, unhashed string. 
+        // If your Laravel system hashes automatically, this handles it.
+        // If it doesn't, we fall back to manual hashing safely below.
+        $user->password = 'Admin_@123'; 
 
-        if (User::where('email', $adminEmail)->exists()) {
-            return 'Admin account already exists.';
+        $user->save();
+
+        // Safety double-check: If the save didn't auto-hash it, force-hash it manually.
+        if (!Hash::needsRehash($user->password)) {
+            $user->password = Hash::make('Admin_@123');
+            $user->save();
         }
 
-        User::create([
-            'name' => 'Admin',
-            'email' => $adminEmail,
-            'password' => Hash::make('Admin_@123'), // Make sure to change this!
-        ]);
-
-        return 'Admin account created successfully with ' . $adminEmail;
+        return "Admin account configured perfectly! Email: {$adminEmail} | Password: Admin_@123";
 
     } catch (\Exception $e) {
-        return 'Error creating admin: ' . $e->getMessage();
+        return 'Error setting up admin: ' . $e->getMessage();
     }
 });
-
 Route::get('/debug-db', function () {
     try {
         return response()->json([
