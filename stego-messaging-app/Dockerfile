@@ -1,10 +1,11 @@
 FROM php:8.2-apache
 
-# Install required system utilities and PHP extensions (including GD for your steganography service)
+# Install required system utilities and PHP extensions (including GD for steganography and libpq-dev for PostgreSQL)
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libpq-dev \
     zip \
     unzip \
     git \
