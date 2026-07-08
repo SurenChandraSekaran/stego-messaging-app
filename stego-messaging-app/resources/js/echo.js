@@ -5,7 +5,7 @@ window.Pusher = Pusher;
 
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: import.meta.env.VITE_PUSHER_APP_KEY,
-    cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+    key: 'df2da99b67cc59faf863', // 🌟 Hardcoded directly so Docker build can't miss it
+    cluster: 'mt1',
     forceTLS: true
 });
