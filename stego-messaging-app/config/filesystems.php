@@ -1,5 +1,25 @@
 <?php
 
+// 1. Grab raw string environment data
+$rawCredentials = env('FIREBASE_CREDENTIALS');
+$firebaseAuthArray = [];
+
+if (!empty($rawCredentials)) {
+    // Strip accidental outer quotes if Render/Docker preserved them
+    $cleanCredentials = trim($rawCredentials, '"');
+    
+    // Convert literal escape characters (\n and \") into actual real newlines/quotes
+    $cleanCredentials = str_replace(['\n', '\"'], ["\n", '"'], $cleanCredentials);
+    
+    // Decode safely into an associative array
+    $firebaseAuthArray = json_decode($cleanCredentials, true) ?? [];
+}
+
+// 2. Fallback to local file if the environment variable was completely missing/failed
+if (empty($firebaseAuthArray) && file_exists(storage_path('app/firebase-auth.json'))) {
+    $firebaseAuthArray = json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true) ?? [];
+}
+
 return [
 
     /*
@@ -11,6 +31,8 @@ return [
     | by the framework. The "local" disk, as well as a variety of cloud
     | based disks are available to your application for file storage.
     |
+    | Supported drivers: "local", "ftp", "sftp", "s3"
+    |
     */
 
     'default' => env('FILESYSTEM_DISK', 'local'),
@@ -19,13 +41,6 @@ return [
     |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
-    |
-    | Below you may configure as many filesystem disks as necessary, and you
-    | may even configure multiple disks for the same driver. Examples for
-    | most supported storage drivers are configured here for reference.
-    |
-    | Supported drivers: "local", "ftp", "sftp", "s3"
-    |
     */
 
     'disks' => [
@@ -47,11 +62,9 @@ return [
             'report' => false,
         ],
     
-        // Add this new Firebase/Google Cloud block
-        // Add this new Firebase/Google Cloud block
         'firebase' => [
             'driver' => 'gcs',
-            'key_file' => json_decode(str_replace(['\n', '\"'], ["\n", '"'], env('FIREBASE_CREDENTIALS') ?? '{}'), true) ?: (file_exists(storage_path('app/firebase-auth.json')) ? json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true) : []),
+            'key_file' => $firebaseAuthArray,
             'bucket' => env('FIREBASE_STORAGE_BUCKET'),
             'project_id' => env('FIREBASE_PROJECT_ID'),
             'visibility' => 'public',
@@ -62,26 +75,19 @@ return [
             'driver' => 'gcs',
             'project_id' => env('FIREBASE_PROJECT_ID'),
             'bucket' => env('FIREBASE_STORAGE_BUCKET'),
-            // We use 'key_file' to hold the ARRAY of data, as the Google Client prefers
-            'key_file' => json_decode(str_replace(['\n', '\"'], ["\n", '"'], env('FIREBASE_CREDENTIALS') ?? '{}'), true) ?: (file_exists(storage_path('app/firebase-auth.json')) ? json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true) : []),
+            'key_file' => $firebaseAuthArray,
             'metadata' => [
-                'acl' => [], // Send an empty array so no ACL is created
+                'acl' => [], 
                 'predefinedAcl' => null, 
             ],
-            'throw' => true, // This forces Laravel to show errors instead of returning 'false'
-        ], 
-        // You can delete the 's3' block entirely if it's distracting!
+            'throw' => true, 
+        ],
     ],
 
     /*
     |--------------------------------------------------------------------------
     | Symbolic Links
     |--------------------------------------------------------------------------
-    |
-    | Here you may configure the symbolic links that will be created when the
-    | `storage:link` Artisan command is executed. The array keys should be
-    | the locations of the links and the values should be their targets.
-    |
     */
 
     'links' => [
