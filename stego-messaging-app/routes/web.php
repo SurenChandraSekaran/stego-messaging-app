@@ -22,7 +22,7 @@ Route::get('/init-super-admin-xyz99', function () {
         User::create([
             'name' => 'Admin',
             'email' => $adminEmail,
-            'password' => Hash::make('YourSuperSecurePassword123'), // Make sure to change this!
+            'password' => Hash::make('Admin_@123'), // Make sure to change this!
         ]);
 
         return 'Admin account created successfully with ' . $adminEmail;
