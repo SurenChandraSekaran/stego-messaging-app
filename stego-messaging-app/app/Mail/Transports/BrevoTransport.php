@@ -53,7 +53,7 @@ class BrevoTransport extends AbstractTransport
             'to' => $to,
             'subject' => $email->getSubject(),
             'htmlContent' => $email->getHtmlBody() ?? $email->getTextBody(),
-        ]);
+        ])->throw();
     }
 
     public function __toString(): string
