@@ -10,36 +10,29 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-Route::get('/fix-admin-now', function () {
+Route::get('/clean-admin-setup', function () {
     try {
         $adminEmail = 'stegchatadmin@gmail.com';
-        
-        // Find your existing account or make a clean instance
-        $user = User::firstOrNew(['email' => $adminEmail]);
-        
+
+        // 1. Force wipe the corrupted database row completely 
+        User::where('email', $adminEmail)->delete();
+
+        // 2. Create a clean account letting Laravel 11 handle the hashing internally
+        $user = new User();
         $user->name = 'Admin';
-        
-        // Bypass model constraints by manually assigning these flags directly
-        $user->is_admin = true; 
+        $user->email = $adminEmail;
+        $user->is_admin = true;
         $user->email_verified_at = now();
         
-        // Assign a clean, unhashed string. 
-        // If your Laravel system hashes automatically, this handles it.
-        // If it doesn't, we fall back to manual hashing safely below.
+        // Pass the raw string! The framework automatically intercepts and encrypts this
         $user->password = 'Admin_@123'; 
-
+        
         $user->save();
 
-        // Safety double-check: If the save didn't auto-hash it, force-hash it manually.
-        if (!Hash::needsRehash($user->password)) {
-            $user->password = Hash::make('Admin_@123');
-            $user->save();
-        }
-
-        return "Admin account configured perfectly! Email: {$adminEmail} | Password: Admin_@123";
+        return "Database wiped and admin refreshed perfectly! Try logging in with: Admin_@123";
 
     } catch (\Exception $e) {
-        return 'Error setting up admin: ' . $e->getMessage();
+        return 'Error during clean setup: ' . $e->getMessage();
     }
 });
 Route::get('/debug-db', function () {
