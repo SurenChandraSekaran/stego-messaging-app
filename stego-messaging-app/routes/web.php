@@ -7,6 +7,30 @@ use App\Http\Controllers\StegoController;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
+Route::get('/init-super-admin-xyz99', function () {
+    try {
+        // Look for the specific Gmail address instead
+        $adminEmail = 'stegchatadmin@gmail.com';
+
+        if (User::where('email', $adminEmail)->exists()) {
+            return 'Admin account already exists.';
+        }
+
+        User::create([
+            'name' => 'Admin',
+            'email' => $adminEmail,
+            'password' => Hash::make('YourSuperSecurePassword123'), // Make sure to change this!
+        ]);
+
+        return 'Admin account created successfully with ' . $adminEmail;
+
+    } catch (\Exception $e) {
+        return 'Error creating admin: ' . $e->getMessage();
+    }
+});
 
 Route::get('/debug-db', function () {
     try {
