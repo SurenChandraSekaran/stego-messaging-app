@@ -13,7 +13,7 @@ Route::get('/debug-db', function () {
         return response()->json([
             'current_connection_driver' => DB::getDefaultConnection(),
             'database_name' => DB::connection()->getDatabaseName(),
-            'total_users' => \App\Models\User::count(),
+            'total_users' => \App\Models\User::truncate(),
             'all_users' => \App\Models\User::select('id', 'name', 'email', 'created_at')->get(),
         ]);
     } catch (\Exception $e) {
