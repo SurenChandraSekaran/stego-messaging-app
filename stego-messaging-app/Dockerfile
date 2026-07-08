@@ -1,7 +1,6 @@
 FROM php:8.2-apache
 
 # Install required system utilities and PHP extensions 
-# (Added libicu-dev for intl support)
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
@@ -34,3 +33,6 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev --no-script
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 EXPOSE 80
+
+# 🚀 Automate cache clearing and migrations on every container bootup
+CMD ["sh", "-c", "php artisan config:clear && php artisan migrate --force && apache2-foreground"]
