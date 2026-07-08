@@ -10,29 +10,28 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-Route::get('/clean-admin-setup', function () {
+Route::get('/force-admin-bcrypt', function () {
     try {
         $adminEmail = 'stegchatadmin@gmail.com';
 
-        // 1. Force wipe the corrupted database row completely 
-        User::where('email', $adminEmail)->delete();
+        // 1. Completely delete any existing record to clear old states
+        DB::table('users')->where('email', $adminEmail)->delete();
 
-        // 2. Create a clean account letting Laravel 11 handle the hashing internally
-        $user = new User();
-        $user->name = 'Admin';
-        $user->email = $adminEmail;
-        $user->is_admin = true;
-        $user->email_verified_at = now();
-        
-        // Pass the raw string! The framework automatically intercepts and encrypts this
-        $user->password = 'Admin_@123'; 
-        
-        $user->save();
+        // 2. Insert directly via DB facade using explicit Bcrypt hashing
+        DB::table('users')->insert([
+            'name' => 'Admin',
+            'email' => $adminEmail,
+            'password' => Hash::make('Admin_@123'), // Explicitly forced to Bcrypt
+            'is_admin' => true,
+            'email_verified_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-        return "Database wiped and admin refreshed perfectly! Try logging in with: Admin_@123";
+        return "Database row forced with clean Bcrypt hash! Please clear your browser cache/cookies before logging in.";
 
     } catch (\Exception $e) {
-        return 'Error during clean setup: ' . $e->getMessage();
+        return 'Error: ' . $e->getMessage();
     }
 });
 Route::get('/debug-db', function () {
