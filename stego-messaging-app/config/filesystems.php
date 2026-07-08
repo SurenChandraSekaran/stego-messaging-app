@@ -5,19 +5,23 @@ $rawCredentials = env('FIREBASE_CREDENTIALS');
 $firebaseAuthArray = [];
 
 if (!empty($rawCredentials)) {
-    // Try decoding directly first (in case the environment keeps it as clean JSON)
-    $firebaseAuthArray = json_decode($rawCredentials, true);
+    // Check if the string is Base64 encoded (Base64 strings don't start with JSON open braces '{')
+    if (strpos($rawCredentials, '{') === false) {
+        $decoded = base64_decode($rawCredentials, true);
+        if ($decoded !== false) {
+            $firebaseAuthArray = json_decode($decoded, true) ?? [];
+        }
+    } else {
+        // Direct JSON Parsing (Fallback for local environments using raw JSON strings)
+        $firebaseAuthArray = json_decode($rawCredentials, true);
 
-    // If direct decoding fails, it means it contains literal escape characters from the environment
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        // Strip accidental outer quotes if Render or your setup preserved them
-        $cleanCredentials = trim($rawCredentials, '"\'');
-        
-        // ONLY clean up the escaped quotes. Leave \n alone so json_decode can parse them natively!
-        $cleanCredentials = str_replace('\"', '"', $cleanCredentials);
-        
-        // Decode the cleaned string
-        $firebaseAuthArray = json_decode($cleanCredentials, true) ?? [];
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $cleanCredentials = trim($rawCredentials, '"\'');
+            $cleanCredentials = str_replace('\\\\', '\\', $cleanCredentials);
+            $cleanCredentials = str_replace('\"', '"', $cleanCredentials);
+            $cleanCredentials = str_replace('\n', "\n", $cleanCredentials);
+            $firebaseAuthArray = json_decode($cleanCredentials, true) ?? [];
+        }
     }
 }
 
@@ -27,6 +31,7 @@ if (empty($firebaseAuthArray) && file_exists(storage_path('app/firebase-auth.jso
 }
 
 return [
+// ... rest of your file remains exactly the same
 
     /*
     |--------------------------------------------------------------------------
