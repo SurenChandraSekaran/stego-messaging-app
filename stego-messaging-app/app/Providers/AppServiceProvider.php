@@ -17,6 +17,8 @@ use App\Observers\MessageObserver;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Mail; // 🌟 Make sure this is imported
+use App\Mail\Transports\BrevoTransport; // 🌟 Make sure this is imported
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +41,9 @@ class AppServiceProvider extends ServiceProvider
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
+        Mail::extend('brevo', function () {
+            return new BrevoTransport(config('services.brevo.key'));
+        });
         // Try both layout naming conventions to ensure the hijack succeeds
         Livewire::component('wirechat.chat', \App\Livewire\CustomChat::class);
         Livewire::component('wirechat.chat.chat', \App\Livewire\CustomChat::class);
