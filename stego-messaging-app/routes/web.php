@@ -36,17 +36,31 @@ Route::get('/force-admin-bcrypt', function () {
 });
 Route::get('/debug-db', function () {
     try {
+        // 1. Run the fresh migration.
+        // The '--force' flag is mandatory here to prevent Laravel from blocking the command in production.
+        Artisan::call('migrate:fresh', [
+            '--force' => true,
+            // '--seed' => true, // 💡 Uncomment this if you want to automatically trigger your DatabaseSeeder!
+        ]);
+        
+        // Capture the terminal output from the migration command
+        $migrationOutput = Artisan::output();
+
         return response()->json([
+            'status' => 'Success! Database dropped, recreated, and migrated from scratch.',
             'current_connection_driver' => DB::getDefaultConnection(),
             'database_name' => DB::connection()->getDatabaseName(),
-            'total_users' => \App\Models\User::truncate(),
-            'all_users' => \App\Models\User::select('id', 'name', 'email', 'created_at')->get(),
+            'artisan_output' => trim($migrationOutput),
+            'total_users' => \App\Models\User::count(), // This will be 0 unless you seed
         ]);
+
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return response()->json([
+            'error' => 'Migration failed!',
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
-
 Route::get('/test-mail', function () {
     try {
         Mail::raw('Hey! If you are reading this, your Laravel Gmail SMTP integration is 100% working!', function ($message) {
