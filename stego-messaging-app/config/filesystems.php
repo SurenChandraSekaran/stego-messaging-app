@@ -5,17 +5,23 @@ $rawCredentials = env('FIREBASE_CREDENTIALS');
 $firebaseAuthArray = [];
 
 if (!empty($rawCredentials)) {
-    // Strip accidental outer quotes if Render/Docker preserved them
-    $cleanCredentials = trim($rawCredentials, '"');
-    
-    // Convert literal escape characters (\n and \") into actual real newlines/quotes
-    $cleanCredentials = str_replace(['\n', '\"'], ["\n", '"'], $cleanCredentials);
-    
-    // Decode safely into an associative array
-    $firebaseAuthArray = json_decode($cleanCredentials, true) ?? [];
+    // Try decoding directly first (in case the environment keeps it as clean JSON)
+    $firebaseAuthArray = json_decode($rawCredentials, true);
+
+    // If direct decoding fails, it means it contains literal escape characters from the environment
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        // Strip accidental outer quotes if Render or your setup preserved them
+        $cleanCredentials = trim($rawCredentials, '"\'');
+        
+        // ONLY clean up the escaped quotes. Leave \n alone so json_decode can parse them natively!
+        $cleanCredentials = str_replace('\"', '"', $cleanCredentials);
+        
+        // Decode the cleaned string
+        $firebaseAuthArray = json_decode($cleanCredentials, true) ?? [];
+    }
 }
 
-// 2. Fallback to local file if the environment variable was completely missing/failed
+// 2. Fallback to local file if the environment variable was missing or failed completely
 if (empty($firebaseAuthArray) && file_exists(storage_path('app/firebase-auth.json'))) {
     $firebaseAuthArray = json_decode(file_get_contents(storage_path('app/firebase-auth.json')), true) ?? [];
 }
