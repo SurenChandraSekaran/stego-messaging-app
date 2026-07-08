@@ -25,22 +25,22 @@ class BrevoTransport extends AbstractTransport
             return;
         }
 
-        // Convert Laravel/Symfony recipients into Brevo API format
+        // 🌟 FIX: Convert recipients and enforce a non-empty name string
         $to = [];
         foreach ($email->getTo() as $address) {
+            $recipientName = trim($address->getName());
             $to[] = [
                 'email' => $address->getAddress(),
-                'name' => $address->getName() ?? ''
+                'name' => !empty($recipientName) ? $recipientName : 'Chat User'
             ];
         }
 
         $fromAddress = $email->getFrom()[0] ?? null;
-        $from = $fromAddress ? [
-            'email' => $fromAddress->getAddress(),
-            'name' => $fromAddress->getName() ?: 'Chat User'
-        ] : [
-            'email' => config('mail.from.address'),
-            'name' => config('mail.from.name')
+        $fromName = $fromAddress ? trim($fromAddress->getName()) : '';
+        
+        $from = [
+            'email' => $fromAddress ? $fromAddress->getAddress() : config('mail.from.address'),
+            'name' => !empty($fromName) ? $fromName : config('mail.from.name', 'StegoApp Admin')
         ];
 
         // Execute API call over regular secure HTTPS (Port 443)
