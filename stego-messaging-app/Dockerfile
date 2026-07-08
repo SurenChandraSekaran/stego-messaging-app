@@ -35,4 +35,4 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 EXPOSE 80
 
 # 🚀 Automate cache clearing and migrations on every container bootup
-CMD ["sh", "-c", "php artisan config:clear && php artisan migrate:fresh --force && apache2-foreground"]
+CMD ["sh", "-c", "php artisan config:clear && php artisan migrate --force && apache2-foreground"]
