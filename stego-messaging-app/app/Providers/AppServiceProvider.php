@@ -16,6 +16,7 @@ use Wirechat\Wirechat\Models\Message;
 use App\Observers\MessageObserver;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -35,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
         // Try both layout naming conventions to ensure the hijack succeeds
         Livewire::component('wirechat.chat', \App\Livewire\CustomChat::class);
         Livewire::component('wirechat.chat.chat', \App\Livewire\CustomChat::class);
