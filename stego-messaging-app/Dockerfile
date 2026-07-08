@@ -1,16 +1,18 @@
 FROM php:8.2-apache
 
-# Install required system utilities and PHP extensions (including GD for steganography and libpq-dev for PostgreSQL)
+# Install required system utilities and PHP extensions 
+# (GD for steganography, libpq-dev for PostgreSQL, libzip-dev for zip utilities)
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
     libpq-dev \
+    libzip-dev \
     zip \
     unzip \
     git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo_pgsql bcmath
+    && docker-php-ext-install gd pdo_pgsql bcmath zip exif
 
 # Route Apache traffic to Laravel's public entry point
 RUN a2enmod rewrite
@@ -23,7 +25,9 @@ COPY . /var/www/html
 
 # Install Composer and optimize your classes for production
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+
+# 💡 Added --no-scripts to prevent Laravel from booting and crashing mid-build
+RUN composer install --no-interaction --optimize-autoloader --no-dev --no-scripts
 
 # Give the web server permission to read/write storage caches
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
