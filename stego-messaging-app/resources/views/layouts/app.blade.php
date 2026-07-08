@@ -252,5 +252,32 @@
                 </div>
             </div>
         </div>
+        <script>
+        window.forceDownloadMedia = async (url, filename) => {
+            try {
+                // Because CORS is enabled, we can safely fetch the video file data
+                const response = await fetch(url);
+                const blob = await response.blob();
+                
+                // Create a temporary local URL for the downloaded blob
+                const blobUrl = URL.createObjectURL(blob);
+                
+                // Create a hidden link element, click it, and destroy it
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename || 'stegchat-video.mp4';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Clean up memory
+                URL.revokeObjectURL(blobUrl);
+            } catch (error) {
+                console.error('Download failed:', error);
+                // Fallback: just open in a new tab if something breaks
+                window.open(url, '_blank');
+            }
+        }
+        </script>
     </body>
 </html>
