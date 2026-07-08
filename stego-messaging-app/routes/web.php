@@ -6,20 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StegoController;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\DB;
 
-Route::get('/debug-db', function () {
-    try {
-        return response()->json([
-            'current_connection_driver' => DB::getDefaultConnection(),
-            'database_name' => DB::connection()->getDatabaseName(),
-            'total_users' => \App\Models\User::truncate(),
-            'all_users' => \App\Models\User::select('id', 'name', 'email', 'created_at')->get(),
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
-    }
-});
 
 /*Route::get('/test-mail', function () {
     try {
