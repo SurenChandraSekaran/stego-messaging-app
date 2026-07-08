@@ -37,7 +37,7 @@ class BrevoTransport extends AbstractTransport
         $fromAddress = $email->getFrom()[0] ?? null;
         $from = $fromAddress ? [
             'email' => $fromAddress->getAddress(),
-            'name' => $fromAddress->getName() ?? config('mail.from.name')
+            'name' => $fromAddress->getName() ?: 'Chat User'
         ] : [
             'email' => config('mail.from.address'),
             'name' => config('mail.from.name')
